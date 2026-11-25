@@ -20,11 +20,13 @@ test('menu et alias autorisés, commande inconnue ignorée', async () => {
   };
   const dispatch = bindCommands(socket, { jidNormalizedUser: normalize }, () => true);
   await dispatch({ type: 'notify', messages: [
-    message('.menu'), message('.ping'), message('.help'), message('.unknown'), message('.ping extra'),
+    message('.menu'), message('.ping'), message('.help'), message('.unknown'), message('.ping extra'), message('.fliptext Venom'), message('.fliptext'),
   ] });
-  assert.equal(replies.length, 3);
-  assert.deepEqual(replies[0].split('\n').slice(1).map(line => line.split(' ')[0]), ['.menu', '.ping', '.aide']);
-  assert.equal(replies[1], 'Pong · Venom');
+  assert.equal(replies.length, 5);
+  assert.deepEqual(replies[0].split('\n').slice(1).map(line => line.split(' ')[0]), ['.menu', '.ping', '.fliptext', '.aide']);
+  assert.equal(replies[1], 'Pong · Venom V4');
+  assert.equal(replies[3], 'Normal : Venom\nInversé : moneV');
+  assert.equal(replies[4], 'Exemple : .fliptext Venom');
   assert.match(replies[2], /bot-connect\.ink-drop\.app/);
 });
 

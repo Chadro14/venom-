@@ -1,9 +1,16 @@
 const commands = new Map([
   ['menu', {
     label: 'Afficher les commandes',
-    run: () => ['*VENOM · Bot Connect*', ...[...commands].map(([name, { label }]) => `.${name} — ${label}`)].join('\n'),
+    run: () => ['*VENOM V4 · Bot Connect*', ...[...commands].map(([name, { label }]) => `.${name} — ${label}`)].join('\n'),
   }],
-  ['ping', { label: 'Vérifier la connexion', run: () => 'Pong · Venom' }],
+  ['ping', { label: 'Vérifier la connexion', run: () => 'Pong · Venom V4' }],
+  ['fliptext', {
+    label: 'Inverser un texte',
+    acceptsText: true,
+    run: text => text
+      ? `Normal : ${text}\nInversé : ${Array.from(text).reverse().join('')}`
+      : 'Exemple : .fliptext Venom',
+  }],
   ['aide', { label: 'Obtenir de l’aide', run: () => 'Pour retrouver ton jumelage ou demander de l’aide : https://bot-connect.ink-drop.app/' }],
 ]);
 
@@ -21,10 +28,14 @@ export function bindCommands(socket, baileys, authorized) {
           ![remoteJid, remoteJidAlt].some(jid => jid && own.has(normalize(jid)))) continue;
       const body = message.message?.ephemeralMessage?.message ?? message.message;
       const text = body?.conversation ?? body?.extendedTextMessage?.text;
-      const name = typeof text === 'string' ? /^\.([a-z]+)$/i.exec(text.trim())?.[1]?.toLowerCase() : undefined;
-      if (!name) continue;
+      if (typeof text !== 'string' || text.length > 1024) continue;
+      const match = /^\.([a-z]+)(?:\s+([\s\S]+))?$/i.exec(text.trim());
+      if (!match) continue;
+      const name = match[1].toLowerCase();
+      const argument = match[2] ?? '';
       const command = commands.get(aliases.get(name) ?? name);
-      if (command && authorized()) await socket.sendMessage(remoteJid, { text: command.run() });
+      if (!command || (argument && !command.acceptsText) || !authorized()) continue;
+      await socket.sendMessage(remoteJid, { text: command.run(argument) });
     }
   };
 }
